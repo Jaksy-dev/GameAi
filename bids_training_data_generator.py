@@ -2,6 +2,40 @@
 import random
 from treys import Card, Deck
 from copy import deepcopy
+import math
+from functools import reduce
+
+import pandas as pd
+import numpy as np
+
+# Issue
+# The hand distribution is skewed towards smaller hands. Non-unique hands of 2 cards are much more (usually around 10x) common than unique hands of 10. A solution for this would be to get the chances of 2 unique hands for each hand size, and then normalize the values to the desired training data length. 
+
+# Generate how many tries it takes on average to get the same hand for each hand sze
+# chances = []
+
+# for n in range(2,14):
+#     chances.append(int(
+#         math.factorial(52) / (math.factorial(n) * math.factorial(52-n)))
+#     )
+
+# gcd = reduce(math.gcd, chances)
+# print(gcd)
+# reduced = [item // gcd for item in chances]
+# print (reduced)
+
+# min_val = min(reduced)
+# max_val = max(reduced)
+# a = 1
+# b = 10000 # iterations
+# normalized = [int(a + (x - min_val) * (b - a) / (max_val - min_val)) for x in reduced]
+# print(normalized)
+
+# This however yields us with 1 hand for the first 5-6 hand size, and 10k hands for 13 hand size. 
+# It would be nice to find some middle ground for this
+# A real solution would be to have an input with sum(reduced) hands tried, but that would be in the 100 billion range
+
+# Another approach is to train a model for each hand count.
 
 # Generate the dictionary
 ranks = "23456789TJQKA"
@@ -27,14 +61,12 @@ def int_hand_to_bitmap (hand):
 
 
 deck = Deck()
-# hand_size = random.randint(2,10)
 player_count=4
 
-# training_data = [["cards", "bid"]]
-training_data = []
 # cards is a bitmap. 1 -> card in hand, 0 -> card not in hand. Bid is the rounds won using this hand.
-for _ in range(100000):
-    for hand_size in range(2,14): # Skip round one because it's played by a different ruleset, and is just for fun
+for hand_size in range(2,14):
+    training_data = []
+    for _ in range(100000): # do not go too high here
         hands = []
         bets = []
         for i in range(player_count):
@@ -74,13 +106,23 @@ for _ in range(100000):
 
         deck = Deck()
 
-import pandas as pd
-import numpy as np
+    combined = np.array([[*row[0], row[1]] for row in training_data])
 
-features = np.array([row[0] for row in training_data])
-labels = np.array([row[1] for row in training_data])
+    df = pd.DataFrame(combined)
+    names=[f"{rank}{suit}" for suit in suits for rank in ranks]
+    names.append("bid")
+    
+    # Normalize the bids to 0-1.
+    # This way, the "bid" will represent how many % of your hand will score.
+    col_min = df.iloc[:, -1].min()
+    col_max = df.iloc[:, -1].max()
+    df.iloc[:, -1] = ((df.iloc[:, -1] - col_min) / (col_max - col_min)).astype('float64')
 
-combined = np.array([[*row[0], row[1]] for row in training_data])
+    df.to_csv(f"bid_data_{hand_size}.csv", header=names, index=False)
+    # df.to_csv(f"bid_data_example.csv", header=names, index=False)
 
-df = pd.DataFrame(combined)
-df.to_csv("bid_data.csv", index=False, header=False)
+
+# features = np.array([row[0] for row in training_data])
+# labels = np.array([row[1] for row in training_data])
+
+
