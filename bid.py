@@ -2,21 +2,21 @@ import pandas as pd
 import time
 # ranks = "23456789TJQKA"
 # suits = "shdc"  # Spades, Hearts, Diamonds, Clubs
-start = time.perf_counter()
-df = pd.read_csv("bid_data_13.csv")
 
-# Example: take a look at how many times a hand has been played, and see the average win amount for that hand
-hand=[1,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,1,0] # only 52 long
-hand_percent = 0.23076923076923078
-# Get the rows where the first 52 values match the list above.
 
-# Compare only the first 52 columns with the hand
-print((df.iloc[:, :52] == hand).all(axis=1).sum())  # Count matching rows
 
-matching_rows = df.iloc[:, -1][(df.iloc[:, :52] == hand).all(axis=1)]
+# # Example: take a look at how many times a hand has been played, and see the average win amount for that hand
+# hand=[1,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,1,0] # only 52 long
+# hand_percent = 0.23076923076923078
+# # Get the rows where the first 52 values match the list above.
 
-# Output the matching rows
-print("Played ", matching_rows.count(), "times with an average score of ", matching_rows.mean())
+# # Compare only the first 52 columns with the hand
+# print((df.iloc[:, :52] == hand).all(axis=1).sum())  # Count matching rows
+
+# matching_rows = df.iloc[:, -1][(df.iloc[:, :52] == hand).all(axis=1)]
+
+# # Output the matching rows
+# print("Played ", matching_rows.count(), "times with an average score of ", matching_rows.mean())
 
 import pandas as pd
 import numpy as np
@@ -125,37 +125,39 @@ def main(data, epochs=10, batch_size=32, learning_rate=0.001, test_size=0.2):
     return model, y_true, y_pred
 
 
-
-trained_model, y_true, y_pred = main(df)
+for n in range(2,14):
+    df = pd.read_csv(f"bid_data_{n}.csv")
+    trained_model, y_true, y_pred = main(df)
+    torch.save(trained_model, f"bid_{n}.pt")
 
 
 # Improvements:
 # Learning rate adjustment
 # Early stopping
 
-torch.save(trained_model, "bid_13.pt")
 
 
 
-# Convert to PyTorch tensor
-input_tensor = torch.tensor(hand, dtype=torch.float32)
 
-# Put model in evaluation mode
-trained_model.eval()
+# # Convert to PyTorch tensor
+# input_tensor = torch.tensor(hand, dtype=torch.float32)
 
-# Get prediction
-with torch.no_grad():
-    prediction = trained_model(input_tensor).item()
+# # Put model in evaluation mode
+# trained_model.eval()
 
-print(f"Predicted Output for already existing hand: {prediction} and it's actual value: {hand_percent}")
+# # Get prediction
+# with torch.no_grad():
+#     prediction = trained_model(input_tensor).item()
 
-# Change the 2 of spades into a 3 of spades
-example_input = [0,1,0,0,1,0,0,1,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,1,0]
+# print(f"Predicted Output for already existing hand: {prediction} and it's actual value: {hand_percent}")
 
-input_tensor = torch.tensor(example_input, dtype=torch.float32)
+# # Change the 2 of spades into a 3 of spades
+# example_input = [0,1,0,0,1,0,0,1,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,1,0]
 
-# Get prediction
-with torch.no_grad():
-    prediction = trained_model(input_tensor).item()
+# input_tensor = torch.tensor(example_input, dtype=torch.float32)
+
+# # Get prediction
+# with torch.no_grad():
+#     prediction = trained_model(input_tensor).item()
     
-print(f"Predicted Output for non existing hand: {prediction}")
+# print(f"Predicted Output for non existing hand: {prediction}")

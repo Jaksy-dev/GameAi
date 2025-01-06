@@ -2,3 +2,4 @@ venv
 bid_data.csv
 bid_data_*.csv
 *.pt
+*.pth
